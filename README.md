@@ -1,4 +1,4 @@
-# Homework №3 -- Image finder
+# Homework №9 -- Image finder
 
 ## General info
 
@@ -10,6 +10,7 @@ Project is created with:
 
 - JavaScript
 - React JS
+- React Hooks
 - CSS
 
 - Pixabay API
