@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 
 import "./styles.css";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
@@ -11,100 +11,103 @@ import ImageGalleryItem from "./components/ImageGalleryItem";
 import Button from "./components/Button";
 import Modal from "./components/Modal";
 
-export class App extends Component {
-  state = {
-    images: [],
-    currentPage: 1,
-    searchQuery: "",
-    isLoading: false,
-    error: null,
-    largeImageURL: "",
-    showModal: false,
+export const App = () => {
+  // state = {
+  //   images: [],
+  //   currentPage: 1,
+  //   searchQuery: "",
+  //   isLoading: false,
+  //   error: null,
+  //   largeImageURL: "",
+  //   showModal: false,
+  // };
+
+  const [images, setImages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [largeImageURL, setLargeImageURL] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  // componentDidUpdate(prevProps, prevState) {
+  //   if (prevState.searchQuery !== this.state.searchQuery) {
+  //     this.getImages();
+  //   }
+  // }
+
+  const onChangeQuery = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+    setImages([]);
+    setError(null);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.searchQuery !== this.state.searchQuery) {
-      this.getImages();
-    }
-  }
+  useEffect(() => {
+    setIsLoading(true);
 
-  onChangeQuery = (query) => {
-    this.setState({
-      searchQuery: query,
-      currentPage: 1,
-      images: [],
-      error: null,
-    });
-  };
-
-  getImages = () => {
-    const { currentPage, searchQuery } = this.state;
-    const options = { currentPage, searchQuery };
-
-    this.setState({ isLoading: true });
-
-    fetchImages(options)
+    fetchImages({ currentPage, searchQuery })
       .then((images) => {
-        this.setState((prevState) => ({
-          images: [...prevState.images, ...images],
-          currentPage: prevState.currentPage + 1,
-        }));
+        setImages((prevImages) => [...prevImages, ...images]);
+        setCurrentPage((prevCurrentPage) => prevCurrentPage + 1);
         if (currentPage > 1) {
           window.scrollTo({
             top: document.querySelector("#imageGallery").scrollHeight,
             behavior: "smooth",
           });
         }
+        if (images.length < 1) {
+          throw new Error("Please try again your request");
+        }
       })
-      .catch((error) => this.setState({ error }))
+      .catch((error) => setError(error.message))
       .finally(() => {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       });
+  }, [searchQuery]);
+
+  const toggleModal = () => {
+    setShowModal((prevShowModal) => !prevShowModal);
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
+  const handleClick = (image) => {
+    toggleModal();
+    setLargeImageURL(image);
   };
 
-  handleClick = (image) => {
-    this.toggleModal();
-    this.setState({ largeImageURL: image });
-  };
+  const renderLoadButton = images.length > 0 && !isLoading;
 
-  render() {
-    const { images, isLoading, error, showModal, largeImageURL } = this.state;
-    const renderLoadButton = images.length > 0 && !isLoading;
+  return (
+    <div>
+      <Searchbar onSubmit={onChangeQuery} />
 
-    return (
-      <div>
-        <Searchbar onSubmit={this.onChangeQuery} />
+      {error && (
+        <h2 style={{ textAlign: "center" }}>Please try again your request</h2>
+      )}
 
-        {error && <h2>Please try again your request</h2>}
+      <ImageGallery>
+        <ImageGalleryItem images={images} onClick={handleClick} />
+      </ImageGallery>
 
-        <ImageGallery>
-          <ImageGalleryItem images={images} onClick={this.handleClick} />
-        </ImageGallery>
+      {isLoading && (
+        <Loader
+          className="Loader"
+          type="Circles"
+          color="#471135"
+          height={100}
+          width={100}
+        />
+      )}
 
-        {isLoading && (
-          <Loader
-            className="Loader"
-            type="Circles"
-            color="#471135"
-            height={100}
-            width={100}
-          />
-        )}
+      {renderLoadButton && <Button onClick={() => null} />}
 
-        {renderLoadButton && <Button onClick={this.getImages} />}
-
-        {showModal && (
-          <Modal onClose={this.toggleModal}>
-            <img src={largeImageURL} alt="" />
-          </Modal>
-        )}
-      </div>
-    );
-  }
-}
+      {showModal && (
+        <Modal onClose={toggleModal}>
+          <img src={largeImageURL} alt="" />
+        </Modal>
+      )}
+    </div>
+  );
+};
 
 export default App;
