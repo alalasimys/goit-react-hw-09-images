@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 import "./styles.css";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
@@ -12,16 +12,6 @@ import Button from "./components/Button";
 import Modal from "./components/Modal";
 
 export const App = () => {
-  // state = {
-  //   images: [],
-  //   currentPage: 1,
-  //   searchQuery: "",
-  //   isLoading: false,
-  //   error: null,
-  //   largeImageURL: "",
-  //   showModal: false,
-  // };
-
   const [images, setImages] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,41 +20,48 @@ export const App = () => {
   const [largeImageURL, setLargeImageURL] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // componentDidUpdate(prevProps, prevState) {
-  //   if (prevState.searchQuery !== this.state.searchQuery) {
-  //     this.getImages();
-  //   }
-  // }
-
-  const onChangeQuery = (query) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-    setImages([]);
-    setError(null);
+  const handleChange = (e) => {
+    setSearchQuery(e.currentTarget.value);
   };
 
-  useEffect(() => {
+  const onSubmit = (e) => {
+    e.preventDefault();
     setIsLoading(true);
-
-    fetchImages({ currentPage, searchQuery })
-      .then((images) => {
-        setImages((prevImages) => [...prevImages, ...images]);
-        setCurrentPage((prevCurrentPage) => prevCurrentPage + 1);
-        if (currentPage > 1) {
-          window.scrollTo({
-            top: document.querySelector("#imageGallery").scrollHeight,
-            behavior: "smooth",
-          });
-        }
-        if (images.length < 1) {
+    fetchImages(1, searchQuery)
+      .then((response) => {
+        if (response.length < 1) {
+          setImages([]);
+          setSearchQuery("");
           throw new Error("Please try again your request");
         }
+        setImages(response);
+        setCurrentPage(1);
+        setError(null);
       })
       .catch((error) => setError(error.message))
       .finally(() => {
         setIsLoading(false);
       });
-  }, [searchQuery]);
+  };
+
+  const onLoadMore = () => {
+    setIsLoading(true);
+
+    fetchImages(currentPage + 1, searchQuery)
+      .then((images) => {
+        setImages((prevImages) => [...prevImages, ...images]);
+        setCurrentPage((prevCurrentPage) => ++prevCurrentPage);
+      })
+      .catch((error) => setError(error.message))
+      .finally(() => {
+        setIsLoading(false);
+
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "smooth",
+        });
+      });
+  };
 
   const toggleModal = () => {
     setShowModal((prevShowModal) => !prevShowModal);
@@ -75,11 +72,15 @@ export const App = () => {
     setLargeImageURL(image);
   };
 
-  const renderLoadButton = images.length > 0 && !isLoading;
+  const renderLoadButton = images.length > 1 && !isLoading;
 
   return (
     <div>
-      <Searchbar onSubmit={onChangeQuery} />
+      <Searchbar
+        onChangeQuery={handleChange}
+        onSubmit={onSubmit}
+        query={searchQuery}
+      />
 
       {error && (
         <h2 style={{ textAlign: "center" }}>Please try again your request</h2>
@@ -99,7 +100,7 @@ export const App = () => {
         />
       )}
 
-      {renderLoadButton && <Button onClick={() => null} />}
+      {renderLoadButton && <Button onClick={onLoadMore} />}
 
       {showModal && (
         <Modal onClose={toggleModal}>

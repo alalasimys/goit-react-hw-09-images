@@ -5,26 +5,17 @@ import PropTypes from "prop-types";
 const modalRoot = document.querySelector("#modal-root");
 
 export const Modal = ({ children, onClose }) => {
-  // componentDidMount() {
-  //   window.addEventListener("keydown", this.handleKeyDown);
-  // }
-
-  // componentWillUnmount() {
-  //   window.removeEventListener("keydown", this.handleKeyDown);
-  // }
-
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === "Escape") {
+        onClose();
+      }
+    };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  });
-
-  const handleKeyDown = (e) => {
-    if (e.code === "Escape") {
-      onClose();
-    }
-  };
+  }, [onClose]);
 
   const handleOverlayClick = (e) => {
     if (e.currentTarget === e.target) {

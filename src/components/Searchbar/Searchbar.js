@@ -1,30 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 
-const Searchbar = ({ onSubmit }) => {
-  const [query, setQuery] = useState("");
-
-  const handleChange = (e) => {
-    setQuery(e.currentTarget.value);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(query);
-
-    setQuery("");
-  };
-
+const Searchbar = ({ onSubmit, onChangeQuery, query }) => {
   return (
     <header className="Searchbar">
-      <form onSubmit={handleSubmit} className="SearchForm">
+      <form onSubmit={onSubmit} className="SearchForm">
         <button type="submit" className="SearchForm-button">
           <span className="SearchForm-button-label">Search</span>
         </button>
 
         <input
           value={query}
-          onChange={handleChange}
+          onChange={onChangeQuery}
           className="SearchForm-input"
           type="text"
           autoComplete="off"
