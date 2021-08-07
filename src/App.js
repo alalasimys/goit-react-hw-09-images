@@ -15,6 +15,7 @@ export const App = () => {
   const [images, setImages] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [largeImageURL, setLargeImageURL] = useState("");
@@ -22,6 +23,7 @@ export const App = () => {
 
   const handleChange = (e) => {
     setSearchQuery(e.currentTarget.value);
+    setInputValue(e.currentTarget.value);
   };
 
   const onSubmit = (e) => {
@@ -29,7 +31,7 @@ export const App = () => {
     setIsLoading(true);
     fetchImages(1, searchQuery)
       .then((response) => {
-        if (response.length < 1) {
+        if (!response.length) {
           setImages([]);
           setSearchQuery("");
           throw new Error("Please try again your request");
@@ -37,6 +39,7 @@ export const App = () => {
         setImages(response);
         setCurrentPage(1);
         setError(null);
+        setInputValue("");
       })
       .catch((error) => setError(error.message))
       .finally(() => {
@@ -79,7 +82,7 @@ export const App = () => {
       <Searchbar
         onChangeQuery={handleChange}
         onSubmit={onSubmit}
-        query={searchQuery}
+        query={inputValue}
       />
 
       {error && (
